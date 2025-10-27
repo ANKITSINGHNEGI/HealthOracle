@@ -1,17 +1,18 @@
-﻿from fastapi import APIRouter
+﻿from fastapi import APIRouter, Request, HTTPException
 from app.models.pydantic_schemas import PredictRequest, PredictResponse
+from app.services.inference import predict_diabetes
 
 router = APIRouter(prefix="/v1", tags=["predict"])
 
 @router.post("/predict", response_model=PredictResponse)
-def predict(payload: PredictRequest) -> PredictResponse:
+def predict(payload: PredictRequest, request: Request):
+    try:
+        risk = predict_diabetes(request.app.state, payload)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Inference error: {e}")
     return PredictResponse(
-        risk={"diabetes": 0.35, "heart_disease": 0.28, "hypertension": 0.31},
-        top_features={"bmi": 0.12, "systolic_bp": 0.09, "cholesterol": 0.07},
-        recommendations=[
-            "Increase weekly activity toward 150 minutes.",
-            "Reduce sodium and saturated fat intake.",
-            "Monitor blood pressure and lipids in 3 months."
-        ],
-        model_version="v0.1.0"
+        risk=risk,
+        top_features={},
+        recommendations=[],
+        model_version=request.app.state.model_version
     )
