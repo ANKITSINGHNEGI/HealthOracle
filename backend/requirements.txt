@@ -1,0 +1,9 @@
+﻿fastapi
+uvicorn[standard]
+pydantic
+numpy
+pandas
+scikit-learn
+joblib
+shap
+python-dotenv
